@@ -1,0 +1,38 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Status {
+  CONFIRMED
+  PREPARING
+  READY
+}
+
+enum Role {
+  STUDENT
+  ADMIN
+}
+
+model User {
+  uuid      String @id @default(uuid())
+  name      String
+  username  String @unique
+  studentId String
+
+  orders Order[]
+}
+
+model Order {
+  uuid       Int      @id @default(autoincrement())
+  user       User     @relation(fields: [userUuid], references: [uuid], onDelete: Cascade)
+  userUuid   String
+  status     Status
+  quantity   Int
+  pickupTime DateTime
+  createdAt  DateTime
+}
