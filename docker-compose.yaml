@@ -7,8 +7,8 @@ services:
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_DB: hurry-curry
-    ports: 
-      - 5431:5432
+    ports:
+      - 5432:5432
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -19,7 +19,7 @@ services:
     restart: always
     container_name: hurry-curry-rds
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis_data:/data
     networks:
@@ -32,4 +32,3 @@ volumes:
 networks:
   app-network:
     driver: bridge
-    

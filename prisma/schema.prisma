@@ -21,8 +21,12 @@ enum Role {
 model User {
   uuid      String @id @default(uuid())
   name      String
-  username  String @unique
+  email     String @unique
+  password  String 
   studentId String
+
+  accessToken        String
+  refreshToken String
 
   orders Order[]
 }
