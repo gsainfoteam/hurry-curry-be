@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Delete } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
@@ -8,20 +8,17 @@ export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   // 주문 생성 API (POST /orders)
-  @Post() 
+  @Post()
   async create(@Body() createOrderDto: CreateOrderDto) {
     // 사용자 ID는 지금은 임시로 1로 고정 (단일 사용자 제한)
-    const userId = 1; 
+    const userId = 1;
 
     // Service의 핵심 로직 호출
-    const newOrder = await this.ordersService.create(
-      createOrderDto, 
-      userId
-    );
-    
+    const newOrder = await this.ordersService.create(createOrderDto, userId);
+
     // 앱에게 성공 응답을 돌려줌. (결제 완료 메시지 포함)
-    return { 
-      message: "결제 완료되었습니다.", // 앱 화면에 표시될 메시지
+    return {
+      message: '결제 완료되었습니다.', // 앱 화면에 표시될 메시지
       orderId: newOrder.id,
       estimatedPickupTime: newOrder.pickupTime.toISOString(), // ISO 형식으로 시간 전달
       totalQuantity: newOrder.quantity,
@@ -43,8 +40,6 @@ export class OrdersController {
   }
 }
 
-
-
 /*
   @Get(':id')
   findOne(@Param('id') id: string) {
@@ -60,4 +55,3 @@ export class OrdersController {
   remove(@Param('id') id: string) {
     return this.ordersService.remove(+id);
   } */
-
