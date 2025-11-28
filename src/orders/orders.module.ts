@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { OrdersProcessor } from './orders.service';
+import { OrdersProcessor } from './orders.processor';
 import { BullModule } from '@nestjs/bullmq';
 import { OrdersController } from './orders.controller';
 import { CURRY_QUEUE } from 'src/common/constants';
