@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
 
 // 임시 데이터 저장소 (DB 연동 전까지 현재 주문 상태를 기억합니다.)
 // Temporary Data Storage (It remembers the current order status until it is integrated with the DB.)
