@@ -88,7 +88,7 @@ export class OrdersRepository {
     });
   }
 
-  async getAdminOrders() {
+  async getProcessingOrders(): Promise<Order[]> {
     return await this.prismaService.order.findMany({
       where: {
         status: {
@@ -97,9 +97,6 @@ export class OrdersRepository {
       },
       orderBy: {
         pickupTime: 'asc',
-      },
-      include: {
-        user: { select: { studentId: true } },
       },
     });
   }
