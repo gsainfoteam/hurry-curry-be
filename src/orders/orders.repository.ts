@@ -27,11 +27,10 @@ export class OrdersRepository {
       if (Array.isArray(state) && state.length > 0) {
         endTime = new Date(state[0].endTime);
       } else {
-        await tx.truckState.create({
-          data: {
-            id: 1,
-            endTime: new Date(),
-          },
+        await tx.truckState.upsert({
+          where: { id: 1 },
+          update: { endTime: new Date() },
+          create: { id: 1, endTime: new Date() },
         });
       }
 
