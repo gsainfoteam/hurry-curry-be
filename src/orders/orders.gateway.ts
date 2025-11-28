@@ -6,6 +6,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
+import { GatewayResponseDto } from './dto/gateway-response.dto';
 
 @WebSocketGateway({
   cors: { origin: '*' },
@@ -31,7 +32,7 @@ export class OrdersGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.logger.log(`Client disconnected: ${client.id}`);
   }
 
-  notifyUser(userId: string, event: string, payload: any) {
+  notifyUser(userId: string, event: string, payload: GatewayResponseDto) {
     this.server.to(`user-${userId}`).emit(event, payload);
   }
 }
