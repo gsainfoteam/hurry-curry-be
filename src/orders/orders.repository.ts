@@ -92,7 +92,7 @@ export class OrdersRepository {
     return await this.prismaService.order.findMany({
       where: {
         status: {
-          in: ['PROCESSING', 'PREPARING'],
+          in: ['PROCESSING'],
         },
       },
       orderBy: {
@@ -110,8 +110,12 @@ export class OrdersRepository {
         where: { id: orderId },
       });
 
+      if (order.status === 'COMPLETED') {
+        throw new ConflictException('Order is already marked as ready');
+      }
+
       const updatedOrder = await this.prismaService.order.update({
-        where: { id: orderId},
+        where: { id: orderId },
         data: {
           status: 'COMPLETED',
         },
@@ -123,7 +127,15 @@ export class OrdersRepository {
         message: `Your Order #${order.id} is ready! Come to the truck!`,
       };
 
-      this.ordersGateway.notifyUser(order.userId, 'order_ready', message);
+      try {
+        this.ordersGateway.notifyUser(
+          updatedOrder.userId,
+          'order_ready',
+          message,
+        );
+      } catch (error) {
+        this.logger.warn(`Failed to notify user ${updatedOrder.userId}`, error);
+      }
 
       return updatedOrder;
     } catch (error) {
