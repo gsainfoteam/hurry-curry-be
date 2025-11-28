@@ -73,8 +73,15 @@ export class OrdersGateway implements OnGatewayConnection, OnGatewayDisconnect {
         secret: this.configService.get<string>('JWT_SECRET'),
       });
 
+      if (!payload.uuid || !payload.email) {
+        throw new WsException('Token payload missing required fields');
+      }
+
       return payload;
     } catch (error) {
+      if (error instanceof WsException) {
+        throw error;
+      }
       throw new WsException('Invalid or expired token');
     }
   }
