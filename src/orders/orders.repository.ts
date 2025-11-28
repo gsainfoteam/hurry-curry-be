@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Order } from '@prisma/client';
+import { TruckState } from '@prisma/client';
 
 @Injectable()
 export class OrdersRepository {
@@ -14,18 +15,25 @@ export class OrdersRepository {
 
   async processOrderTransaction(data: CreateOrderDto): Promise<Order> {
     return await this.prismaService.$transaction(async (tx) => {
-      let state = await tx.truckState.findUnique({ where: { id: 1 } });
+      const state = await tx.$queryRaw<TruckState[]>`
+      SELECT * FROM "TruckState" WHERE id = 1 FOR UPDATE 
+      `;
+      let endTime = new Date();
 
-      if (!state) {
-        state = await tx.truckState.create({
-          data: { id: 1, endTime: new Date() },
+      if (Array.isArray(state) && state.length > 0) {
+        endTime = new Date(state[0].endTime);
+      } else {
+        await tx.truckState.create({
+          data: {
+            id: 1,
+            endTime: new Date(),
+          },
         });
       }
 
       const now = new Date();
-      const lastOrderTime = new Date(state.endTime);
 
-      const startTime = lastOrderTime > now ? lastOrderTime : now;
+      const startTime = endTime > now ? endTime : now;
 
       const totalDuration =
         data.naanQuantity * OrdersRepository.COOKING_TIME_PER_NAAN +
