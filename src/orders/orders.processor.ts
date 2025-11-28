@@ -1,22 +1,56 @@
-import { Logger } from '@nestjs/common';
-import { OrdersRepository } from './orders.repository';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { CURRY_QUEUE, JOB_PROCESS_ORDER } from 'src/common/constants';
 import { Job } from 'bullmq';
+import { Logger } from '@nestjs/common';
+import { OrdersGateway } from './orders.gateway';
+import { CURRY_QUEUE, JOB_PROCESS_ORDER } from '../common/constants';
+import { OrdersRepository } from './orders.repository';
 import { Order } from '@prisma/client';
+import { ConfigService } from '@nestjs/config';
 
 @Processor(CURRY_QUEUE)
 export class OrdersProcessor extends WorkerHost {
   private readonly logger = new Logger(OrdersProcessor.name);
 
-  constructor(private readonly ordersRepository: OrdersRepository) {
+  constructor(
+    private readonly ordersRepository: OrdersRepository,
+    private readonly ordersGateway: OrdersGateway,
+    private readonly configService: ConfigService,
+  ) {
     super();
   }
 
   async process(job: Job): Promise<Order> {
     switch (job.name) {
       case JOB_PROCESS_ORDER:
-        return this.ordersRepository.processOrderTransaction(job.data);
+        this.logger.log(`Processing Job ${job.id}`);
+
+        try {
+          const order = await this.ordersRepository.processOrderTransaction(
+            job.data,
+          );
+
+          const kstPickupTime = order.pickupTime.toLocaleString('en-US', {
+            timeZone: this.configService.get('TIMEZONE') || 'Asia/Seoul',
+            hour12: false,
+          });
+
+          const message = {
+            orderId: order.id,
+            pickupTime: kstPickupTime,
+            status: order.status,
+          };
+
+          this.ordersGateway.notifyUser(
+            order.userId,
+            'order_confirmed',
+            message,
+          );
+
+          return order;
+        } catch (error) {
+          this.logger.error(`Job failed: ${error.message}`);
+          throw error;
+        }
       default:
         throw new Error(`Unknown job name: ${job.name}`);
     }

@@ -19,6 +19,17 @@ export class OrdersController {
   @ApiBody({
     type: CreateOrderDto,
     description: 'Order details to be processed',
+    examples: {
+      sample: {
+        summary: 'Example order',
+        description: 'Student ordering 2 curry and 3 naan',
+        value: {
+          userId: 'd9e4f6c4-1234-4a7f-8b62-9c3c8e8b1b2c',
+          curryQuantity: 2,
+          naanQuantity: 3,
+        },
+      },
+    },
   })
   @ApiResponse({
     status: HttpStatus.ACCEPTED,
@@ -41,11 +52,13 @@ export class OrdersController {
     description: 'Failed to queue order',
   })
   async create(@Body() createOrderDto: CreateOrderDto) {
+    const pickupTime = new Date();
+
     const job = await this.curryQueue.add(
       JOB_PROCESS_ORDER,
       {
         ...createOrderDto,
-        createdAt: new Date(),
+        pickupTime,
       },
       {
         attempts: 3,
@@ -61,7 +74,7 @@ export class OrdersController {
       success: true,
       message: 'Order is on line',
       jobId: job.id,
-      timestamp: new Date(),
+      status: 'PENDING',
     };
   }
 }

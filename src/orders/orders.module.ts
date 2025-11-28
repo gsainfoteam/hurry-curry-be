@@ -4,6 +4,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { OrdersController } from './orders.controller';
 import { CURRY_QUEUE } from 'src/common/constants';
 import { OrdersRepository } from './orders.repository';
+import { OrdersGateway } from './orders.gateway';
 
 @Module({
   imports: [
@@ -12,6 +13,6 @@ import { OrdersRepository } from './orders.repository';
     }),
   ],
   controllers: [OrdersController],
-  providers: [OrdersProcessor, OrdersRepository],
+  providers: [OrdersProcessor, OrdersRepository, OrdersGateway],
 })
 export class OrdersModule {}

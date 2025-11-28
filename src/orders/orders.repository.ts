@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Order } from '@prisma/client';
+import { TruckState } from '@prisma/client';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class OrdersRepository {
@@ -10,22 +12,37 @@ export class OrdersRepository {
 
   private readonly logger = new Logger(OrdersRepository.name);
 
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly configService: ConfigService,
+  ) {}
 
   async processOrderTransaction(data: CreateOrderDto): Promise<Order> {
     return await this.prismaService.$transaction(async (tx) => {
-      let state = await tx.truckState.findUnique({ where: { id: 1 } });
+      await tx.truckState.upsert({
+        where: { id: 1 },
+        update: {},
+        create: { id: 1, endTime: new Date() },
+      });
 
-      if (!state) {
-        state = await tx.truckState.create({
-          data: { id: 1, endTime: new Date() },
+      const state = await tx.$queryRaw<TruckState[]>`
+      SELECT * FROM "TruckState" WHERE id = 1 FOR UPDATE 
+      `;
+      let endTime = new Date();
+
+      if (Array.isArray(state) && state.length > 0) {
+        endTime = new Date(state[0].endTime);
+      } else {
+        await tx.truckState.upsert({
+          where: { id: 1 },
+          update: { endTime: new Date() },
+          create: { id: 1, endTime: new Date() },
         });
       }
 
       const now = new Date();
-      const lastOrderTime = new Date(state.endTime);
 
-      const startTime = lastOrderTime > now ? lastOrderTime : now;
+      const startTime = endTime > now ? endTime : now;
 
       const totalDuration =
         data.naanQuantity * OrdersRepository.COOKING_TIME_PER_NAAN +
@@ -43,13 +60,20 @@ export class OrdersRepository {
           userId: data.userId,
           curryQuantity: data.curryQuantity,
           naanQuantity: data.naanQuantity,
+          createdAt: now,
           pickupTime: pickupTime,
           status: 'CONFIRMED',
         },
       });
 
       this.logger.log(
-        `Order ${newOrder.id} Scheduled for ${pickupTime.toISOString()}`,
+        `Order ${newOrder.id} Scheduled for ${pickupTime.toLocaleString(
+          'en-US',
+          {
+            timeZone: this.configService.get('TIMEZONE') || 'Asia/Seoul',
+            hour12: false,
+          },
+        )}`,
       );
 
       return newOrder;
