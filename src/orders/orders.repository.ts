@@ -3,6 +3,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Order } from '@prisma/client';
 import { TruckState } from '@prisma/client';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class OrdersRepository {
@@ -11,7 +12,10 @@ export class OrdersRepository {
 
   private readonly logger = new Logger(OrdersRepository.name);
 
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly configService: ConfigService,
+  ) {}
 
   async processOrderTransaction(data: CreateOrderDto): Promise<Order> {
     return await this.prismaService.$transaction(async (tx) => {
@@ -58,7 +62,13 @@ export class OrdersRepository {
       });
 
       this.logger.log(
-        `Order ${newOrder.id} Scheduled for ${pickupTime.toISOString()}`,
+        `Order ${newOrder.id} Scheduled for ${pickupTime.toLocaleString(
+          'en-US',
+          {
+            timeZone: this.configService.get('TIMEZONE') || 'Asia/Seoul',
+            hour12: false,
+          },
+        )}`,
       );
 
       return newOrder;

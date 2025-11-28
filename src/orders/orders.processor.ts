@@ -5,6 +5,7 @@ import { OrdersGateway } from './orders.gateway';
 import { CURRY_QUEUE, JOB_PROCESS_ORDER } from '../common/constants';
 import { OrdersRepository } from './orders.repository';
 import { Order } from '@prisma/client';
+import { ConfigService } from '@nestjs/config';
 
 @Processor(CURRY_QUEUE)
 export class OrdersProcessor extends WorkerHost {
@@ -13,6 +14,7 @@ export class OrdersProcessor extends WorkerHost {
   constructor(
     private readonly ordersRepository: OrdersRepository,
     private readonly ordersGateway: OrdersGateway,
+    private readonly configService: ConfigService,
   ) {
     super();
   }
@@ -28,14 +30,14 @@ export class OrdersProcessor extends WorkerHost {
           );
 
           const kstPickupTime = order.pickupTime.toLocaleString('en-US', {
-            timeZone: 'Asia/Seoul',
+            timeZone: this.configService.get('TIMEZONE') || 'Asia/Seoul',
             hour12: false,
           });
 
           const message = {
             orderId: order.id,
             pickupTime: kstPickupTime,
-            status: 'CONFIRMED',
+            status: order.status,
           };
 
           this.ordersGateway.notifyUser(

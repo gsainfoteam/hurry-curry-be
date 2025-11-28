@@ -13,11 +13,6 @@ import { OrdersGateway } from './orders.gateway';
     }),
   ],
   controllers: [OrdersController],
-  providers: [
-    OrdersProcessor,
-    OrdersRepository,
-    OrdersController,
-    OrdersGateway,
-  ],
+  providers: [OrdersProcessor, OrdersRepository, OrdersGateway],
 })
 export class OrdersModule {}
