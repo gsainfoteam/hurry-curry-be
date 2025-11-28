@@ -19,6 +19,12 @@ export class OrdersRepository {
 
   async processOrderTransaction(data: CreateOrderDto): Promise<Order> {
     return await this.prismaService.$transaction(async (tx) => {
+      await tx.truckState.upsert({
+        where: { id: 1 },
+        update: {},
+        create: { id: 1, endTime: new Date() },
+      });
+
       const state = await tx.$queryRaw<TruckState[]>`
       SELECT * FROM "TruckState" WHERE id = 1 FOR UPDATE 
       `;
