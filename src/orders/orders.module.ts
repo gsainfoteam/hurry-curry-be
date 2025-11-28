@@ -1,9 +1,17 @@
 import { Module } from '@nestjs/common';
-import { OrdersService } from './orders.service';
+import { OrdersProcessor } from './orders.processor';
+import { BullModule } from '@nestjs/bullmq';
 import { OrdersController } from './orders.controller';
+import { CURRY_QUEUE } from 'src/common/constants';
+import { OrdersRepository } from './orders.repository';
 
 @Module({
+  imports: [
+    BullModule.registerQueue({
+      name: CURRY_QUEUE,
+    }),
+  ],
   controllers: [OrdersController],
-  providers: [OrdersService],
+  providers: [OrdersProcessor, OrdersRepository],
 })
 export class OrdersModule {}

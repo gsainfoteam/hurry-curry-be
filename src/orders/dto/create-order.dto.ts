@@ -1,14 +1,16 @@
-// class-validator는 유효성 검사를 위해 사용되지만, 지금은 간단하게 타입만 정의합니다.
+import { IsInt, IsUUID, Min, Max } from 'class-validator';
+
 export class CreateOrderDto {
-  //1번 카레 개수 (예시)
-  curry1Count: number;
+  @IsUUID()
+  userId: string;
 
-  //2번 카레 개수 (예시)
-  curry2Count: number;
+  @IsInt()
+  @Min(0)
+  @Max(10)
+  curryQuantity: number;
 
-  // 3번 포크 카레 개수 (예시)
-  curry3Count: number;
-
-  //난(Naan) 추가 개수
-  naanCount: number;
+  @IsInt()
+  @Min(0)
+  @Max(10)
+  naanQuantity: number;
 }
