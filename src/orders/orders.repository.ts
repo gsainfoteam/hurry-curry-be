@@ -1,20 +1,29 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Order } from '@prisma/client';
 import { TruckState } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
+import { OrdersGateway } from './orders.gateway';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 
 @Injectable()
 export class OrdersRepository {
   private static readonly COOKING_TIME_PER_NAAN = 3 * 60 * 1000; // 3 minutes
   private static readonly POURING_TIME_PER_CURRY = 20 * 1000; // 20 seconds
 
-  private readonly logger = new Logger(OrdersRepository.name);
+  private logger = new Logger(OrdersRepository.name);
 
   constructor(
     private readonly prismaService: PrismaService,
     private readonly configService: ConfigService,
+    private readonly ordersGateway: OrdersGateway,
   ) {}
 
   async processOrderTransaction(data: CreateOrderDto): Promise<Order> {
@@ -62,7 +71,7 @@ export class OrdersRepository {
           naanQuantity: data.naanQuantity,
           createdAt: now,
           pickupTime: pickupTime,
-          status: 'CONFIRMED',
+          status: 'PROCESSING',
         },
       });
 
@@ -75,8 +84,72 @@ export class OrdersRepository {
           },
         )}`,
       );
-
       return newOrder;
     });
+  }
+
+  async getProcessingOrders(): Promise<Order[]> {
+    return await this.prismaService.order.findMany({
+      where: {
+        status: {
+          in: ['PROCESSING'],
+        },
+      },
+      orderBy: {
+        pickupTime: 'asc',
+      },
+    });
+  }
+
+  async markReady(orderId: number): Promise<Order> {
+    try {
+      const order = await this.prismaService.order.findUniqueOrThrow({
+        where: { id: orderId },
+      });
+
+      if (order.status === 'COMPLETED') {
+        throw new ConflictException('Order is already marked as ready');
+      }
+
+      const updatedOrder = await this.prismaService.order.update({
+        where: { id: orderId },
+        data: {
+          status: 'COMPLETED',
+        },
+      });
+
+      const message = {
+        orderId: orderId,
+        status: 'COMPLETED',
+        message: `Your Order #${order.id} is ready! Come to the truck!`,
+      };
+
+      try {
+        this.ordersGateway.notifyUser(
+          updatedOrder.userId,
+          'order_ready',
+          message,
+        );
+      } catch (error) {
+        this.logger.warn(`Failed to notify user ${updatedOrder.userId}`, error);
+      }
+
+      return updatedOrder;
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === 'P2025') {
+          throw new NotFoundException(`Order #${orderId} not found`);
+        }
+        this.logger.error(`Database error: ${error.code}`, error);
+        throw new InternalServerErrorException('Failed to update order');
+      }
+
+      if (error instanceof ConflictException) {
+        throw error;
+      }
+
+      this.logger.error('Unexpected error', error);
+      throw new InternalServerErrorException('Failed to mark order as ready');
+    }
   }
 }
