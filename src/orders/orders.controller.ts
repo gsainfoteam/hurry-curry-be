@@ -53,10 +53,6 @@ export class OrdersController {
   })
   async create(@Body() createOrderDto: CreateOrderDto) {
     const pickupTime = new Date();
-    const pickupTimeKST = pickupTime.toLocaleString('en-US', {
-      timeZone: 'Asia/Seoul',
-      hour12: false,
-    });
 
     const job = await this.curryQueue.add(
       JOB_PROCESS_ORDER,
@@ -78,7 +74,7 @@ export class OrdersController {
       success: true,
       message: 'Order is on line',
       jobId: job.id,
-      pickupTime: pickupTimeKST,
+      status: 'PENDING',
     };
   }
 }

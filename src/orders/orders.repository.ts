@@ -51,6 +51,7 @@ export class OrdersRepository {
           userId: data.userId,
           curryQuantity: data.curryQuantity,
           naanQuantity: data.naanQuantity,
+          createdAt: now,
           pickupTime: pickupTime,
           status: 'CONFIRMED',
         },
