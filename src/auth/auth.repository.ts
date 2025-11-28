@@ -5,8 +5,8 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { User } from 'generated/prisma/client';
-import { PrismaClientKnownRequestError } from 'generated/prisma/internal/prismaNamespace';
+import { User } from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RegisterUserDto } from './dto/req/registerUser.dto';
 
@@ -43,6 +43,7 @@ export class AuthRepository {
           name: body.name,
           email: body.email,
           password: body.password,
+          studentId: body.studentId,
         },
       });
     } catch (error) {

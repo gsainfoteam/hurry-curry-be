@@ -7,7 +7,7 @@ import { RegisterUserDto } from './dto/req/registerUser.dto';
 import { JwtTokenType } from './types/jwtToken.type';
 import { LoginDto } from './dto/req/login.dto';
 import { PayloadDto } from './dto/req/payload.dto';
-import { User } from 'generated/prisma/client';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -33,25 +33,27 @@ export class AuthService {
   }
 
   async login(body: LoginDto): Promise<JwtTokenType> {
-    const user = await this.authRepository.findUserByEmail(body.email);
+    try {
+      const user = await this.authRepository.findUserByEmail(body.email);
 
-    if (!user) {
+      const isPasswordValid = await bcrypt.compare(
+        body.password,
+        user.password,
+      );
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      const tokens = await this.generateTokens(user.uuid, user.email);
+
+      const hashedRefreshToken = await bcrypt.hash(tokens.refresh_token, 10);
+      await this.authRepository.updateToken(user.uuid, hashedRefreshToken);
+
+      return tokens;
+    } catch (error) {
       throw new UnauthorizedException('Invalid credentials');
     }
-
-    const isPasswordValid = await bcrypt.compare(body.password, user.password);
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    const tokens = await this.generateTokens(user.uuid, user.email);
-
-    const hashedRefreshToken = await bcrypt.hash(tokens.refresh_token, 10);
-    await this.authRepository.updateToken(user.uuid, hashedRefreshToken);
-
-    return tokens;
   }
-
   async refresh(refreshToken: string): Promise<JwtTokenType> {
     try {
       const payload = this.jwtService.verify<

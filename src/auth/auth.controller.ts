@@ -19,7 +19,7 @@ import {
 import { JwtAuthGuard } from './guard/jwt.guard';
 import { RegisterUserDto } from './dto/req/registerUser.dto';
 import { LoginDto } from './dto/req/login.dto';
-import { RefreshTokenDto } from './dto/req/refreshToken.dto'; // 👈 New DTO needed
+import { RefreshTokenDto } from './dto/req/refreshToken.dto';
 
 @ApiTags('auth')
 @Controller('auth')
