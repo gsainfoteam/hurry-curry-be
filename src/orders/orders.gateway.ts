@@ -69,8 +69,13 @@ export class OrdersGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     try {
+      const jwtSecret = this.configService.get<string>('JWT_SECRET');
+      if (!jwtSecret) {
+        throw new WsException('JWT_SECRET is not configured');
+      }
+
       const payload = await this.jwtService.verifyAsync(token, {
-        secret: this.configService.get<string>('JWT_SECRET'),
+        secret: jwtSecret,
       });
 
       if (!payload.uuid || !payload.email) {
