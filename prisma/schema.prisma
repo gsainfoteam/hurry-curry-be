@@ -7,8 +7,7 @@ datasource db {
 }
 
 enum Status {
-  CONFIRMED
-  PREPARING
+  PROCESSING
   COMPLETED
 }
 
@@ -35,7 +34,7 @@ model Order {
   user   User   @relation(fields: [userId], references: [uuid], onDelete: Cascade)
   userId String
 
-  status        Status   @default(CONFIRMED)
+  status        Status   @default(PROCESSING)
   curryQuantity Int
   naanQuantity  Int
   pickupTime    DateTime

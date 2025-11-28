@@ -7,9 +7,13 @@ export class GatewayResponseDto {
 
   @IsString()
   @IsNotEmpty()
-  pickupTime: string;
+  pickupTime?: string;
 
   @IsNotEmpty()
   @IsString()
   status: string;
+
+  @IsString()
+  @IsNotEmpty()
+  message?: string;
 }
