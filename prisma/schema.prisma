@@ -9,7 +9,7 @@ datasource db {
 enum Status {
   CONFIRMED
   PREPARING
-  READY
+  COMPLETED
 }
 
 enum Role {
@@ -31,11 +31,11 @@ model User {
 }
 
 model Order {
-  id       Int    @id @default(autoincrement())
-  user     User   @relation(fields: [userId], references: [uuid], onDelete: Cascade)
+  id     Int    @id @default(autoincrement())
+  user   User   @relation(fields: [userId], references: [uuid], onDelete: Cascade)
   userId String
 
-  status        Status
+  status        Status   @default(CONFIRMED)
   curryQuantity Int
   naanQuantity  Int
   pickupTime    DateTime
@@ -44,6 +44,6 @@ model Order {
 }
 
 model TruckState {
-  id      Int      @id
-  endTime DateTime
+  id      Int      @id @default(1)
+  endTime DateTime @default(now())
 }

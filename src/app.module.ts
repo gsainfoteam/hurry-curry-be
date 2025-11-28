@@ -5,7 +5,6 @@ import { OrdersModule } from './orders/orders.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { BullModule } from '@nestjs/bullmq';
-import { CURRY_QUEUE } from './common/constants';
 
 @Module({
   imports: [
@@ -15,17 +14,13 @@ import { CURRY_QUEUE } from './common/constants';
 
     BullModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => ({
         connection: {
-          host: await configService.get('REDIS_HOST'),
-          port: parseInt(configService.get<string>('REDIS_PORT')!),
+          host: configService.get('REDIS_HOST'),
+          port: parseInt(configService.getOrThrow<string>('REDIS_PORT'), 10),
         },
       }),
       inject: [ConfigService],
-    }),
-
-    BullModule.registerQueue({
-      name: CURRY_QUEUE,
     }),
   ],
   controllers: [AppController],
