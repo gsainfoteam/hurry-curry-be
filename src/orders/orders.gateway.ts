@@ -87,17 +87,19 @@ export class OrdersGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   private extractToken(client: Socket): string | undefined {
-    if (client.handshake.auth?.token) {
+    if (
+      client.handshake.auth?.token &&
+      typeof client.handshake.auth.token === 'string'
+    ) {
       return client.handshake.auth.token;
     }
 
-    if (client.handshake.query?.token) {
-      return client.handshake.query.token as string;
-    }
-
     const authHeader = client.handshake.headers.authorization;
-    if (authHeader && authHeader.split(' ')[0] === 'Bearer') {
-      return authHeader.split(' ')[1];
+    if (authHeader && typeof authHeader === 'string') {
+      const [type, token] = authHeader.split(' ');
+      if (type === 'Bearer' && token) {
+        return token;
+      }
     }
 
     return undefined;
