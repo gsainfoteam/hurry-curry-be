@@ -1,56 +1,67 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
-import { OrdersService } from './orders.processor';
+import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import { CURRY_QUEUE, JOB_PROCESS_ORDER } from 'src/common/constants';
+import { Queue } from 'bullmq';
 import { CreateOrderDto } from './dto/create-order.dto';
 
+@ApiTags('orders')
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(@InjectQueue(CURRY_QUEUE) private curryQueue: Queue) {}
 
-  // 주문 생성 API (POST /orders)
   @Post()
+  @HttpCode(HttpStatus.ACCEPTED)
+  @ApiOperation({
+    summary: 'Create a new order',
+    description: 'New Order',
+  })
+  @ApiBody({
+    type: CreateOrderDto,
+    description: 'Order details to be processed',
+  })
+  @ApiResponse({
+    status: HttpStatus.ACCEPTED,
+    description: 'Order successfully queued for processing',
+    schema: {
+      example: {
+        success: true,
+        message: 'Order is on line',
+        jobId: '1234567890',
+        timestamp: '2024-01-15T10:30:00.000Z',
+      },
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid order data provided',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Failed to queue order',
+  })
   async create(@Body() createOrderDto: CreateOrderDto) {
-    // 사용자 ID는 지금은 임시로 1로 고정 (단일 사용자 제한)
-    const userId = 1;
+    const job = await this.curryQueue.add(
+      JOB_PROCESS_ORDER,
+      {
+        ...createOrderDto,
+        createdAt: new Date(),
+      },
+      {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 1000,
+        },
+        removeOnComplete: true,
+      },
+    );
 
-    // Service의 핵심 로직 호출
-    const newOrder = await this.ordersService.create(createOrderDto, userId);
-
-    // 앱에게 성공 응답을 돌려줌. (결제 완료 메시지 포함)
     return {
-      message: '결제 완료되었습니다.', // 앱 화면에 표시될 메시지
-      orderId: newOrder.id,
-      estimatedPickupTime: newOrder.pickupTime.toISOString(), // ISO 형식으로 시간 전달
-      totalQuantity: newOrder.quantity,
-    };
-  }
-
-  // 2. 대기 상태 조회 API (READ)
-  // 앱의 첫 화면에서 '대기 건수'를 보여주기 위해 사용
-  @Get('status') // GET /orders/status 엔드포인트
-  async getOrderStatus() {
-    // Service를 호출하여 현재 대기 중인 주문 건수를 가져옴.
-    const count = await this.ordersService.getActiveOrderCount();
-
-    // 앱에게 응답
-    return {
-      activeOrderCount: count, // 현재 대기열에 있는 주문 건수
-      message: `현재 ${count}개의 카레 주문 건이 대기열에 있습니다.`,
+      success: true,
+      message: 'Order is on line',
+      jobId: job.id,
+      timestamp: new Date(),
     };
   }
 }
-
-/*
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.ordersService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto) {
-    return this.ordersService.update(+id, updateOrderDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.ordersService.remove(+id);
-  } */
