@@ -26,7 +26,10 @@ export class OrdersRepository {
     private readonly ordersGateway: OrdersGateway,
   ) {}
 
-  async processOrderTransaction(data: CreateOrderDto): Promise<Order> {
+  async processOrderTransaction(
+    data: CreateOrderDto,
+    userId: string,
+  ): Promise<Order> {
     return await this.prismaService.$transaction(async (tx) => {
       await tx.truckState.upsert({
         where: { id: 1 },
@@ -66,7 +69,7 @@ export class OrdersRepository {
 
       const newOrder = await tx.order.create({
         data: {
-          userId: data.userId,
+          userId: userId,
           curryQuantity: data.curryQuantity,
           naanQuantity: data.naanQuantity,
           createdAt: now,
