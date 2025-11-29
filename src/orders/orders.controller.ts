@@ -26,6 +26,8 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { OrdersRepository } from './orders.repository';
 import { JwtAuthGuard } from 'src/auth/guard/jwt.guard';
 import type { Request } from 'express';
+import { OrderRoleGuard, RequiredRole } from './guard/role.guard';
+import { Role } from '@prisma/client';
 
 type AuthenticatedRequest = Request & {
   user: { uuid: string; email: string; [key: string]: any };
@@ -79,8 +81,9 @@ export class OrdersController {
     status: HttpStatus.INTERNAL_SERVER_ERROR,
     description: 'Failed to queue order',
   })
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, OrderRoleGuard)
   @ApiBearerAuth()
+  @RequiredRole(Role.STUDENT)
   async create(
     @Body() { curryQuantity, naanQuantity }: CreateOrderDto,
     @Req() req: AuthenticatedRequest,
@@ -115,8 +118,9 @@ export class OrdersController {
 
   @Patch(':id/ready')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, OrderRoleGuard)
   @ApiBearerAuth()
+  @RequiredRole(Role.ADMIN)
   @ApiOperation({
     summary: 'Mark order as ready for pickup',
     description: 'Updates order status to COMPLETED and notifies the customer.',
@@ -160,8 +164,9 @@ export class OrdersController {
 
   @Get('completed')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, OrderRoleGuard)
   @ApiBearerAuth()
+  @RequiredRole(Role.ADMIN)
   @ApiOperation({
     summary: 'Get all completed orders',
     description:
@@ -198,8 +203,9 @@ export class OrdersController {
 
   @Get('processing')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, OrderRoleGuard)
   @ApiBearerAuth()
+  @RequiredRole(Role.ADMIN)
   @ApiOperation({
     summary: 'Get all processing orders',
     description:
@@ -236,8 +242,9 @@ export class OrdersController {
 
   @Get(':id/completed')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, OrderRoleGuard)
   @ApiBearerAuth()
+  @RequiredRole(Role.STUDENT)
   @ApiOperation({
     summary: 'Get user completed orders',
     description:
@@ -274,8 +281,9 @@ export class OrdersController {
 
   @Get(':id/processing')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, OrderRoleGuard)
   @ApiBearerAuth()
+  @RequiredRole(Role.STUDENT)
   @ApiOperation({
     summary: 'Get user processing orders',
     description:
