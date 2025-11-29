@@ -91,11 +91,52 @@ export class OrdersRepository {
     });
   }
 
-  async getProcessingOrders(): Promise<Order[]> {
+  async getAllProcessingOrders(): Promise<Order[]> {
     return await this.prismaService.order.findMany({
       where: {
         status: {
           in: ['PROCESSING'],
+        },
+      },
+      orderBy: {
+        pickupTime: 'asc',
+      },
+    });
+  }
+
+  async getAllCompletedOrders(): Promise<Order[]> {
+    return await this.prismaService.order.findMany({
+      where: {
+        status: {
+          in: ['COMPLETED'],
+        },
+      },
+      orderBy: {
+        pickupTime: 'asc',
+      },
+    });
+  }
+
+  async getUserProcessingOrders(userId: string): Promise<Order[]> {
+    return await this.prismaService.order.findMany({
+      where: {
+        userId: userId,
+        status: {
+          in: ['PROCESSING'],
+        },
+      },
+      orderBy: {
+        pickupTime: 'asc',
+      },
+    });
+  }
+
+  async getUserCompletedOrders(userId: string): Promise<Order[]> {
+    return await this.prismaService.order.findMany({
+      where: {
+        userId: userId,
+        status: {
+          in: ['COMPLETED'],
         },
       },
       orderBy: {

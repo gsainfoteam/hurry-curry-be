@@ -27,6 +27,7 @@ export class OrdersProcessor extends WorkerHost {
         try {
           const order = await this.ordersRepository.processOrderTransaction(
             job.data,
+            job.data.userId,
           );
 
           const kstPickupTime = order.pickupTime.toLocaleString('en-US', {

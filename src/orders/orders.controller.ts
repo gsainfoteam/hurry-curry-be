@@ -158,6 +158,44 @@ export class OrdersController {
     return this.ordersRepository.markReady(id);
   }
 
+  @Get('completed')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get all completed orders',
+    description:
+      'Returns a list of all orders with COMPLETED status. Admin use only.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'List of completed orders',
+    schema: {
+      example: [
+        {
+          id: 123,
+          userId: 'd9e4f6c4-1234-4a7f-8b62-9c3c8e8b1b2c',
+          curryQuantity: 2,
+          naanQuantity: 3,
+          status: 'COMPLETED',
+          pickupTime: '2024-01-15T11:30:00.000Z',
+          createdAt: '2024-01-15T11:00:00.000Z',
+        },
+      ],
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Authentication required',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Failed to fetch orders',
+  })
+  async getCompletedOrders() {
+    return await this.ordersRepository.getAllCompletedOrders();
+  }
+
   @Get('processing')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
@@ -193,6 +231,82 @@ export class OrdersController {
     description: 'Failed to fetch orders',
   })
   async getProcessingOrders() {
-    return await this.ordersRepository.getProcessingOrders();
+    return await this.ordersRepository.getAllProcessingOrders();
+  }
+
+  @Get(':id/completed')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get user completed orders',
+    description:
+      'Returns a list of all orders with COMPLETED status of a user.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'List of completed orders of a user',
+    schema: {
+      example: [
+        {
+          id: 123,
+          userId: 'd9e4f6c4-1234-4a7f-8b62-9c3c8e8b1b2c',
+          curryQuantity: 2,
+          naanQuantity: 3,
+          status: 'COMPLETED',
+          pickupTime: '2024-01-15T11:30:00.000Z',
+          createdAt: '2024-01-15T11:00:00.000Z',
+        },
+      ],
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Authentication required',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Failed to fetch orders',
+  })
+  async getUserCompletedOrders(@Req() req: AuthenticatedRequest) {
+    return await this.ordersRepository.getUserCompletedOrders(req.user.uuid);
+  }
+
+  @Get(':id/processing')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get user processing orders',
+    description:
+      'Returns a list of all orders with PROCESSING status of a user.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'List of processing orders of a user',
+    schema: {
+      example: [
+        {
+          id: 123,
+          userId: 'd9e4f6c4-1234-4a7f-8b62-9c3c8e8b1b2c',
+          curryQuantity: 2,
+          naanQuantity: 3,
+          status: 'PROCESSING',
+          pickupTime: '2024-01-15T11:30:00.000Z',
+          createdAt: '2024-01-15T11:00:00.000Z',
+        },
+      ],
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Authentication required',
+  })
+  @ApiResponse({
+    status: HttpStatus.INTERNAL_SERVER_ERROR,
+    description: 'Failed to fetch orders',
+  })
+  async getUserProcessingOrders(@Req() req: AuthenticatedRequest) {
+    return await this.ordersRepository.getUserProcessingOrders(req.user.uuid);
   }
 }
