@@ -24,7 +24,9 @@ import { LoginDto } from './dto/req/login.dto';
 import { RefreshTokenDto } from './dto/req/refreshToken.dto';
 import type { Request } from 'express';
 
-type AuthenticatedRequest = Request & { user?: { uuid?: string } };
+type AuthenticatedRequest = Request & {
+  user: { uuid: string; email: string; [key: string]: any };
+};
 
 @ApiTags('auth')
 @Controller('auth')
@@ -75,7 +77,7 @@ export class AuthController {
     @Req() req: AuthenticatedRequest,
     @Body() body: RefreshTokenDto,
   ): Promise<{ message: string }> {
-    const userUuid = req.user?.uuid;
+    const userUuid = req.user.uuid;
 
     if (!userUuid) {
       throw new UnauthorizedException('Invalid access token');

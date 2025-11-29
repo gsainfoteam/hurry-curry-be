@@ -11,6 +11,11 @@ enum Status {
   COMPLETED
 }
 
+enum TruckStatus {
+  WORKING
+  CLOSED
+}
+
 enum Role {
   STUDENT
   ADMIN
@@ -22,6 +27,7 @@ model User {
   email     String @unique
   password  String
   studentId String
+  role      Role   @default(STUDENT)
 
   accessToken  String?
   refreshToken String?

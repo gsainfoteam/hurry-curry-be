@@ -1,16 +1,13 @@
-import { IsInt, IsUUID, Min, Max } from 'class-validator';
+import { IsInt, Min, Max } from 'class-validator';
 
 export class CreateOrderDto {
-  @IsUUID()
-  userId: string;
-
   @IsInt()
-  @Min(0)
+  @Min(1)
   @Max(10)
   curryQuantity: number;
 
   @IsInt()
-  @Min(0)
+  @Min(1)
   @Max(10)
   naanQuantity: number;
 }
