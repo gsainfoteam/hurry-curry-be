@@ -7,8 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { Order } from '@prisma/client';
-import { TruckState } from '@prisma/client';
+import { Order, Status, TruckState } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import { OrdersGateway } from './orders.gateway';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
@@ -74,7 +73,7 @@ export class OrdersRepository {
           naanQuantity: data.naanQuantity,
           createdAt: now,
           pickupTime: pickupTime,
-          status: 'PROCESSING',
+          status: Status.PROCESSING,
         },
       });
 
@@ -95,7 +94,7 @@ export class OrdersRepository {
     return await this.prismaService.order.findMany({
       where: {
         status: {
-          in: ['PROCESSING'],
+          in: [Status.PROCESSING],
         },
       },
       orderBy: {
@@ -108,7 +107,7 @@ export class OrdersRepository {
     return await this.prismaService.order.findMany({
       where: {
         status: {
-          in: ['COMPLETED'],
+          in: [Status.COMPLETED],
         },
       },
       orderBy: {
@@ -122,7 +121,7 @@ export class OrdersRepository {
       where: {
         userId: userId,
         status: {
-          in: ['PROCESSING'],
+          in: [Status.PROCESSING],
         },
       },
       orderBy: {
@@ -136,7 +135,7 @@ export class OrdersRepository {
       where: {
         userId: userId,
         status: {
-          in: ['COMPLETED'],
+          in: [Status.COMPLETED],
         },
       },
       orderBy: {
@@ -151,20 +150,20 @@ export class OrdersRepository {
         where: { id: orderId },
       });
 
-      if (order.status === 'COMPLETED') {
+      if (order.status === Status.COMPLETED) {
         throw new ConflictException('Order is already marked as ready');
       }
 
       const updatedOrder = await this.prismaService.order.update({
         where: { id: orderId },
         data: {
-          status: 'COMPLETED',
+          status: Status.COMPLETED,
         },
       });
 
       const message = {
         orderId: orderId,
-        status: 'COMPLETED',
+        status: Status.COMPLETED,
         message: `Your Order #${order.id} is ready! Come to the truck!`,
       };
 
