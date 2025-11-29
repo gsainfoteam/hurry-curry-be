@@ -8,7 +8,6 @@ import { Order } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import { IsInt, IsUUID, Max, Min, validateSync } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
-import { PrismaService } from 'src/prisma/prisma.service';
 
 class ProcessOrderJobDto {
   @IsUUID()
@@ -33,7 +32,6 @@ export class OrdersProcessor extends WorkerHost {
     private readonly ordersRepository: OrdersRepository,
     private readonly ordersGateway: OrdersGateway,
     private readonly configService: ConfigService,
-    private readonly prismaService: PrismaService,
   ) {
     super();
   }
@@ -56,20 +54,13 @@ export class OrdersProcessor extends WorkerHost {
             );
           }
 
-          const userExists = await this.prismaService.user.findUnique({
-            where: { uuid: validated.userId },
-            select: { uuid: true },
-          });
-
-          if (!userExists) {
-            throw new Error(`Invalid job data: user ${validated.userId} not found`);
-          }
-
-          const order = await this.ordersRepository.processOrderTransaction({
-            userId: validated.userId,
-            curryQuantity: validated.curryQuantity,
-            naanQuantity: validated.naanQuantity,
-          });
+          const order = await this.ordersRepository.processOrderTransaction(
+            {
+              curryQuantity: validated.curryQuantity,
+              naanQuantity: validated.naanQuantity,
+            },
+            validated.userId,
+          );
 
           const kstPickupTime = order.pickupTime.toLocaleString('en-US', {
             timeZone: this.configService.get('TIMEZONE') || 'Asia/Seoul',

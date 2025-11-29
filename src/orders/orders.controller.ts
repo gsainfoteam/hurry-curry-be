@@ -240,7 +240,7 @@ export class OrdersController {
     return await this.ordersRepository.getAllProcessingOrders();
   }
 
-  @Get(':id/completed')
+  @Get('my/completed')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard, OrderRoleGuard)
   @ApiBearerAuth()
@@ -279,7 +279,7 @@ export class OrdersController {
     return await this.ordersRepository.getUserCompletedOrders(req.user.uuid);
   }
 
-  @Get(':id/processing')
+  @Get('my/processing')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard, OrderRoleGuard)
   @ApiBearerAuth()

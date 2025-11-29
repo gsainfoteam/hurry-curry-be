@@ -6,7 +6,6 @@ import { CURRY_QUEUE } from 'src/common/constants';
 import { OrdersRepository } from './orders.repository';
 import { OrdersGateway } from './orders.gateway';
 import { PrismaModule } from 'src/prisma/prisma.module';
-import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
@@ -15,7 +14,6 @@ import { AuthModule } from 'src/auth/auth.module';
       name: CURRY_QUEUE,
     }),
     PrismaModule,
-    JwtModule,
     AuthModule,
   ],
   controllers: [OrdersController],

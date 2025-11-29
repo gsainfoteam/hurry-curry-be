@@ -30,6 +30,17 @@ export class OrdersRepository {
     userId: string,
   ): Promise<Order> {
     return await this.prismaService.$transaction(async (tx) => {
+      const userExists = await this.prismaService.user.findUnique({
+        where: { uuid: userId },
+        select: { uuid: true },
+      });
+
+      if (!userExists) {
+        throw new NotFoundException(
+          `Invalid job data: user ${userId} not found`,
+        );
+      }
+
       await tx.truckState.upsert({
         where: { id: 1 },
         update: {},
