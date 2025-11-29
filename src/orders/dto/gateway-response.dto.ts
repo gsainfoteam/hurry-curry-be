@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty, IsString } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class GatewayResponseDto {
   @IsInt()
@@ -6,7 +6,7 @@ export class GatewayResponseDto {
   orderId: number;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   pickupTime?: string;
 
   @IsNotEmpty()
@@ -14,6 +14,6 @@ export class GatewayResponseDto {
   status: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   message?: string;
 }

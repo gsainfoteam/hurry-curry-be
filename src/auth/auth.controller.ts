@@ -5,6 +5,8 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Req,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import {
@@ -20,6 +22,9 @@ import { JwtAuthGuard } from './guard/jwt.guard';
 import { RegisterUserDto } from './dto/req/registerUser.dto';
 import { LoginDto } from './dto/req/login.dto';
 import { RefreshTokenDto } from './dto/req/refreshToken.dto';
+import type { Request } from 'express';
+
+type AuthenticatedRequest = Request & { user?: { uuid?: string } };
 
 @ApiTags('auth')
 @Controller('auth')
@@ -50,9 +55,9 @@ export class AuthController {
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Refresh Access Token' })
+  @ApiOperation({ summary: 'Refresh access token' })
   @ApiOkResponse({ description: 'Returns new access and refresh tokens' })
-  @ApiUnauthorizedResponse({ description: 'Invalid Refresh Token' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or expired refresh token' })
   async refreshToken(
     @Body() body: RefreshTokenDto,
   ): Promise<{ access_token: string; refresh_token: string }> {
@@ -65,8 +70,22 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Logout user' })
   @ApiOkResponse({ description: 'Logout successful' })
-  async logout(@Body() body: RefreshTokenDto): Promise<{ message: string }> {
-    await this.authService.logOut(body.refreshToken);
+  @ApiUnauthorizedResponse({ description: 'Invalid access token' })
+  async logout(
+    @Req() req: AuthenticatedRequest,
+    @Body() body: RefreshTokenDto,
+  ): Promise<{ message: string }> {
+    const userUuid = req.user?.uuid;
+
+    if (!userUuid) {
+      throw new UnauthorizedException('Invalid access token');
+    }
+
+    await this.authService.logOut({
+      uuid: userUuid,
+      refreshToken: body.refreshToken,
+    });
+
     return { message: 'Logout successful' };
   }
 }
