@@ -35,4 +35,4 @@ USER node
 
 EXPOSE 3000
 
-CMD ["dumb-init", "sh", "-c", "npx prisma migrate deploy && node dist/main"]
+CMD ["dumb-init", "sh", "-c", "npx prisma migrate deploy && node dist/src/main"]
