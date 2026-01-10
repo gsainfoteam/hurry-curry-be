@@ -1,3 +1,3 @@
-export class CustomConfigService{
-    
+export class CustomConfigService {}
+
 }

@@ -13,7 +13,7 @@ export class PrismaService
           url: customConfigService.DATABASE_URL,
         },
       },
-    })
+    });
   }
 
   async onModuleInit() {
