@@ -1,8 +1,8 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { Logger } from '@nestjs/common';
-import { CURRY_QUEUE, JOB_PROCESS_ORDER } from '../../../libs/common/src/constants';
-import { OrdersRepository } from '../../../libs/orders/src/orders.repository';
+import { CURRY_QUEUE, JOB_PROCESS_ORDER } from '@lib/common';
+import { OrdersRepository } from '@lib/orders';
 import { Order } from '@prisma/client';
 import { IsInt, IsUUID, Max, Min, validateSync } from 'class-validator';
 import { plainToInstance } from 'class-transformer';

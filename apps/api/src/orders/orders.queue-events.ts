@@ -7,7 +7,7 @@ import {
 import { QueueEvents } from 'bullmq';
 import { ConfigService } from '@nestjs/config';
 import { OrdersGateway } from './orders.gateway';
-import { CURRY_QUEUE } from '../../../../libs/common/src/constants';
+import { CURRY_QUEUE } from '@lib/common';
 
 type CompletedOrderPayload = {
   id: number;
@@ -45,23 +45,17 @@ export class OrdersQueueEventsService
     });
     await this.queueEvents.waitUntilReady();
 
-    this.queueEvents.on('completed', ({ jobId, returnvalue }) => {
+    this.queueEvents.on('completed', async ({ jobId, returnvalue }) => {
       const order = this.parseCompletedOrder(returnvalue);
       if (!order) {
         this.logger.warn(`Completed job ${jobId} returned no order payload`);
         return;
       }
 
-      const pickupDate = new Date(order.pickupTime);
-      const pickupTime = Number.isNaN(pickupDate.valueOf())
-        ? String(order.pickupTime)
-        : pickupDate.toLocaleString('en-US', {
-            timeZone: this.configService.get('TIMEZONE') || 'Asia/Seoul',
-            hour12: false,
-          });
+      const pickupTime = this.formatPickupTime(order.pickupTime);
 
       try {
-        this.ordersGateway.notifyUser(order.userId, 'order_confirmed', {
+        await this.ordersGateway.notifyUser(order.userId, 'order_confirmed', {
           orderId: order.id,
           pickupTime,
           status: order.status,
@@ -112,5 +106,27 @@ export class OrdersQueueEventsService
       typeof candidate.status === 'string' &&
       typeof candidate.pickupTime !== 'undefined'
     );
+  }
+
+  private formatPickupTime(pickupTime: string | Date): string {
+    const pickupDate = new Date(pickupTime);
+    if (Number.isNaN(pickupDate.valueOf())) {
+      return String(pickupTime);
+    }
+
+    try {
+      const timezoneValue = this.configService.get<string>('TIMEZONE');
+      const timezone =
+        timezoneValue && timezoneValue.trim().length > 0
+          ? timezoneValue
+          : 'Asia/Seoul';
+      return pickupDate.toLocaleString('en-US', {
+        timeZone: timezone,
+        hour12: false,
+      });
+    } catch (error) {
+      this.logger.warn('Invalid timezone configuration, using UTC', error);
+      return pickupDate.toISOString();
+    }
   }
 }

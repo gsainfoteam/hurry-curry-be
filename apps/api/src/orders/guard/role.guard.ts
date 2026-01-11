@@ -6,8 +6,8 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role } from '@prisma/client';
-import { PrismaService } from '../../../../../libs/prisma/src/prisma.service';
-import { REQUIRED_ROLE_KEY } from '../../../../../libs/common/src/decorators/required-role.decorator';
+import { PrismaService } from '@lib/prisma';
+import { REQUIRED_ROLE_KEY } from '@lib/common';
 
 @Injectable()
 export class OrderRoleGuard implements CanActivate {

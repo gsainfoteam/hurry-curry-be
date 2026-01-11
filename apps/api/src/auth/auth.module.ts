@@ -6,7 +6,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AuthRepository } from './auth.repository';
 import { JwtStrategy } from './guard/jwt.strategy';
-import { PrismaModule } from '../../../../libs/prisma/src/prisma.module';
+import { PrismaModule } from '@lib/prisma';
 
 @Module({
   imports: [

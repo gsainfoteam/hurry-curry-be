@@ -9,7 +9,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { GatewayResponseDto } from '../../../../libs/orders/src/dto/gateway-response.dto';
+import { GatewayResponseDto } from '@lib/orders';
 
 @WebSocketGateway({
   cors: {

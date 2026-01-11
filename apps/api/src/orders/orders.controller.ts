@@ -21,14 +21,13 @@ import {
   ApiParam,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { CURRY_QUEUE, JOB_PROCESS_ORDER } from '../../../../libs/common/src/constants';
+import { CURRY_QUEUE, JOB_PROCESS_ORDER } from '@lib/common';
 import { Queue } from 'bullmq';
-import { CreateOrderDto } from '../../../../libs/orders/src/dto/create-order.dto';
-import { OrdersRepository } from '../../../../libs/orders/src/orders.repository';
+import { CreateOrderDto, OrdersRepository } from '@lib/orders';
 import { JwtAuthGuard } from '../auth/guard/jwt.guard';
 import type { Request } from 'express';
 import { OrderRoleGuard } from './guard/role.guard';
-import { RequiredRole } from '../../../../libs/common/src/decorators/required-role.decorator';
+import { RequiredRole } from '@lib/common';
 import { Role, Status } from '@prisma/client';
 import { OrdersGateway } from './orders.gateway';
 
@@ -174,7 +173,7 @@ export class OrdersController {
     };
 
     try {
-      this.ordersGateway.notifyUser(
+      await this.ordersGateway.notifyUser(
         updatedOrder.userId,
         'order_ready',
         message,

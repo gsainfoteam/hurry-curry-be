@@ -38,8 +38,4 @@ export class CustomConfigService {
   get JWT_REFRESH_EXPIRE(): string {
     return this.getEnvVariable('JWT_REFRESH_EXPIRE');
   }
-
-  get JWT_REFREH_EXPIRE(): string {
-    return this.JWT_REFRESH_EXPIRE;
-  }
 }

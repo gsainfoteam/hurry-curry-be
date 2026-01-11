@@ -4,7 +4,21 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(ApiModule);
-  app.enableCors();
+  const origins = (process.env.CORS_ORIGINS ?? '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  const allowedOrigins =
+    origins.length > 0
+      ? origins
+      : ['http://localhost:3000', 'http://localhost:5173'];
+
+  app.enableCors({
+    origin: allowedOrigins,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    credentials: Boolean(process.env.CORS_ALLOW_CREDENTIALS),
+  });
 
   const config = new DocumentBuilder()
     .setTitle('hurry-curry-be')
