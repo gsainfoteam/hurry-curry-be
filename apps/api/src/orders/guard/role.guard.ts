@@ -3,15 +3,11 @@ import {
   ExecutionContext,
   ForbiddenException,
   Injectable,
-  SetMetadata,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role } from '@prisma/client';
-import { PrismaService } from 'src/prisma/prisma.service';
-
-export const REQUIRED_ROLE_KEY = 'requiredRole';
-export const RequiredRole = (role: Role) =>
-  SetMetadata(REQUIRED_ROLE_KEY, role);
+import { PrismaService } from '@lib/prisma';
+import { REQUIRED_ROLE_KEY } from '@lib/common';
 
 @Injectable()
 export class OrderRoleGuard implements CanActivate {

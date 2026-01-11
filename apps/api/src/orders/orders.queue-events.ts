@@ -1,0 +1,142 @@
+import {
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
+import { QueueEvents } from 'bullmq';
+import { ConfigService } from '@nestjs/config';
+import { OrdersGateway } from './orders.gateway';
+import { CURRY_QUEUE } from '@lib/common';
+
+type CompletedOrderPayload = {
+  id: number;
+  userId: string;
+  pickupTime: string | Date;
+  status: string;
+};
+
+@Injectable()
+export class OrdersQueueEventsService
+  implements OnModuleInit, OnModuleDestroy
+{
+  private readonly logger = new Logger(OrdersQueueEventsService.name);
+  private queueEvents?: QueueEvents;
+
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly ordersGateway: OrdersGateway,
+  ) {}
+
+  async onModuleInit() {
+    const nodeEnvValue =
+      this.configService.get<string>('NODE_ENV') ?? process.env.NODE_ENV ?? '';
+    const isProduction = nodeEnvValue.trim().toLowerCase() === 'production';
+    const hostValue = this.configService.get<string>('REDIS_HOST');
+    const host = hostValue?.trim() ?? '';
+    if (isProduction && host.length === 0) {
+      throw new Error('REDIS_HOST must be set in production');
+    }
+    const resolvedHost = host.length > 0 ? host : 'localhost';
+    const portValue = this.configService.get<string>('REDIS_PORT');
+    const parsedPort = parseInt(portValue ?? '', 10);
+    const hasValidPort = !Number.isNaN(parsedPort) && parsedPort > 0;
+    if (isProduction && !hasValidPort) {
+      throw new Error('REDIS_PORT must be set to a valid number in production');
+    }
+    const port = hasValidPort ? parsedPort : 6379;
+
+    this.queueEvents = new QueueEvents(CURRY_QUEUE, {
+      connection: {
+        host: resolvedHost,
+        port,
+      },
+    });
+    await this.queueEvents.waitUntilReady();
+
+    this.queueEvents.on('completed', async ({ jobId, returnvalue }) => {
+      const order = this.parseCompletedOrder(returnvalue);
+      if (!order) {
+        this.logger.warn(`Completed job ${jobId} returned no order payload`);
+        return;
+      }
+
+      const pickupTime = this.formatPickupTime(order.pickupTime);
+
+      try {
+        await this.ordersGateway.notifyUser(order.userId, 'order_confirmed', {
+          orderId: order.id,
+          pickupTime,
+          status: order.status,
+        });
+      } catch (error) {
+        this.logger.warn(`Failed to notify user ${order.userId}`, error);
+      }
+    });
+
+    this.queueEvents.on('error', (error) => {
+      this.logger.error('Queue events error', error);
+    });
+  }
+
+  async onModuleDestroy() {
+    await this.queueEvents?.close();
+  }
+
+  private parseCompletedOrder(
+    returnvalue: unknown,
+  ): CompletedOrderPayload | null {
+    if (!returnvalue) return null;
+
+    if (typeof returnvalue === 'string') {
+      try {
+        const parsed = JSON.parse(returnvalue);
+        return this.isCompletedOrderPayload(parsed) ? parsed : null;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    if (typeof returnvalue === 'object') {
+      return this.isCompletedOrderPayload(returnvalue) ? returnvalue : null;
+    }
+
+    return null;
+  }
+
+  private isCompletedOrderPayload(
+    value: unknown,
+  ): value is CompletedOrderPayload {
+    if (!value || typeof value !== 'object') return false;
+    const candidate = value as CompletedOrderPayload;
+    return (
+      typeof candidate.id === 'number' &&
+      typeof candidate.userId === 'string' &&
+      typeof candidate.status === 'string' &&
+      (typeof candidate.pickupTime === 'string' ||
+        candidate.pickupTime instanceof Date)
+    );
+  }
+
+  private formatPickupTime(pickupTime: string | Date): string {
+    const pickupDate = new Date(pickupTime);
+    if (Number.isNaN(pickupDate.valueOf())) {
+      return String(pickupTime);
+    }
+
+    try {
+      const timezoneValue = this.configService.get<string>('TIMEZONE');
+      const timezone =
+        timezoneValue && timezoneValue.trim().length > 0
+          ? timezoneValue
+          : 'Asia/Seoul';
+      return pickupDate.toLocaleString('en-US', {
+        timeZone: timezone,
+        hour12: false,
+      });
+    } catch (error) {
+      this.logger.warn('Invalid timezone configuration, using UTC', error);
+      return pickupDate.toISOString();
+    }
+  }
+}

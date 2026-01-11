@@ -1,11 +1,9 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { Logger } from '@nestjs/common';
-import { OrdersGateway } from './orders.gateway';
-import { CURRY_QUEUE, JOB_PROCESS_ORDER } from '../common/constants';
-import { OrdersRepository } from './orders.repository';
+import { CURRY_QUEUE, JOB_PROCESS_ORDER } from '@lib/common';
+import { OrdersRepository } from '@lib/orders';
 import { Order } from '@prisma/client';
-import { ConfigService } from '@nestjs/config';
 import { IsInt, IsUUID, Max, Min, validateSync } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 
@@ -30,8 +28,6 @@ export class OrdersProcessor extends WorkerHost {
 
   constructor(
     private readonly ordersRepository: OrdersRepository,
-    private readonly ordersGateway: OrdersGateway,
-    private readonly configService: ConfigService,
   ) {
     super();
   }
@@ -60,23 +56,6 @@ export class OrdersProcessor extends WorkerHost {
               naanQuantity: validated.naanQuantity,
             },
             validated.userId,
-          );
-
-          const kstPickupTime = order.pickupTime.toLocaleString('en-US', {
-            timeZone: this.configService.get('TIMEZONE') || 'Asia/Seoul',
-            hour12: false,
-          });
-
-          const message = {
-            orderId: order.id,
-            pickupTime: kstPickupTime,
-            status: order.status,
-          };
-
-          this.ordersGateway.notifyUser(
-            order.userId,
-            'order_confirmed',
-            message,
           );
 
           return order;

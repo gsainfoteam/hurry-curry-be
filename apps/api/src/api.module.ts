@@ -26,4 +26,4 @@ import { BullModule } from '@nestjs/bullmq';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class ApiModule {}
