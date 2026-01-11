@@ -104,7 +104,8 @@ export class OrdersQueueEventsService
       typeof candidate.id === 'number' &&
       typeof candidate.userId === 'string' &&
       typeof candidate.status === 'string' &&
-      typeof candidate.pickupTime !== 'undefined'
+      (typeof candidate.pickupTime === 'string' ||
+        candidate.pickupTime instanceof Date)
     );
   }
 

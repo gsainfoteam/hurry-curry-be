@@ -12,12 +12,16 @@ async function bootstrap() {
     origins.length > 0
       ? origins
       : ['http://localhost:3000', 'http://localhost:5173'];
+  const allowCredentialsValue = process.env.CORS_ALLOW_CREDENTIALS ?? '';
+  const allowCredentials = ['1', 'true'].includes(
+    allowCredentialsValue.trim().toLowerCase(),
+  );
 
   app.enableCors({
     origin: allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-    credentials: Boolean(process.env.CORS_ALLOW_CREDENTIALS),
+    credentials: allowCredentials,
   });
 
   const config = new DocumentBuilder()
