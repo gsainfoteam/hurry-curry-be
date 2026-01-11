@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../../../../libs/prisma/src/prisma.service';
 import { RegisterUserDto } from './dto/req/registerUser.dto';
 
 @Injectable()

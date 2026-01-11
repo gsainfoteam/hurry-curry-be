@@ -10,6 +10,10 @@ export class CustomConfigService {
     return this.configService.getOrThrow(key);
   }
 
+  get DATABASE_URL(): string {
+    return this.getEnvVariable('DATABASE_URL');
+  }
+
   get DATABASE_USER(): string {
     return this.getEnvVariable('DATABASE_USER');
   }

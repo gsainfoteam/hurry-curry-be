@@ -4,6 +4,10 @@ import { IsNotEmpty, IsNumber, IsString, validateSync } from 'class-validator';
 export class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
+  DATABASE_URL: string;
+
+  @IsString()
+  @IsNotEmpty()
   DATABASE_USER: string;
 
   @IsString()

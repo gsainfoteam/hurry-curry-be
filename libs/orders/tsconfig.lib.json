@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "declaration": true,
-    "outDir": "../../dist/libs/custom-config",
+    "outDir": "../../dist/libs/orders",
     "rootDir": "."
   },
   "include": ["src/**/*"],

@@ -10,6 +10,7 @@ import {
   Get,
   UseGuards,
   Req,
+  Logger,
 } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import {
@@ -20,14 +21,15 @@ import {
   ApiParam,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { CURRY_QUEUE, JOB_PROCESS_ORDER } from 'src/common/constants';
+import { CURRY_QUEUE, JOB_PROCESS_ORDER } from '../../../../libs/common/src/constants';
 import { Queue } from 'bullmq';
-import { CreateOrderDto } from './dto/create-order.dto';
-import { OrdersRepository } from './orders.repository';
-import { JwtAuthGuard } from 'src/auth/guard/jwt.guard';
+import { CreateOrderDto } from '../../../../libs/orders/src/dto/create-order.dto';
+import { OrdersRepository } from '../../../../libs/orders/src/orders.repository';
+import { JwtAuthGuard } from '../auth/guard/jwt.guard';
 import type { Request } from 'express';
 import { OrderRoleGuard, RequiredRole } from './guard/role.guard';
-import { Role } from '@prisma/client';
+import { Role, Status } from '@prisma/client';
+import { OrdersGateway } from './orders.gateway';
 
 type AuthenticatedRequest = Request & {
   user: { uuid: string; email: string; [key: string]: any };
@@ -36,9 +38,12 @@ type AuthenticatedRequest = Request & {
 @ApiTags('orders')
 @Controller('orders')
 export class OrdersController {
+  private readonly logger = new Logger(OrdersController.name);
+
   constructor(
     @InjectQueue(CURRY_QUEUE) private curryQueue: Queue,
     private readonly ordersRepository: OrdersRepository,
+    private readonly ordersGateway: OrdersGateway,
   ) {}
 
   @Post()
@@ -159,7 +164,28 @@ export class OrdersController {
     description: 'Failed to update order',
   })
   async markReady(@Param('id', ParseIntPipe) id: number) {
-    return this.ordersRepository.markReady(id);
+    const updatedOrder = await this.ordersRepository.markReady(id);
+
+    const message = {
+      orderId: id,
+      status: Status.COMPLETED,
+      message: `Your Order #${updatedOrder.id} is ready! Come to the truck!`,
+    };
+
+    try {
+      this.ordersGateway.notifyUser(
+        updatedOrder.userId,
+        'order_ready',
+        message,
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Failed to notify user ${updatedOrder.userId}`,
+        error,
+      );
+    }
+
+    return updatedOrder;
   }
 
   @Get('completed')

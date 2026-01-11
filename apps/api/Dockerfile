@@ -10,12 +10,9 @@ RUN npm ci
 COPY . .
 
 RUN DATABASE_URL="postgresql://dummy:5432/mydb" npx prisma generate
-
 RUN npm run build
 
-
 RUN npm prune --production
-
 
 FROM node:20-alpine
 
@@ -35,4 +32,4 @@ USER node
 
 EXPOSE 3000
 
-CMD ["dumb-init", "sh", "-c", "npx prisma migrate deploy && node dist/src/main"]
+CMD ["dumb-init", "sh", "-c", "npx prisma migrate deploy && node dist/apps/api/src/main"]

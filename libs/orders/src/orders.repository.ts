@@ -5,11 +5,10 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../../prisma/src/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Order, Status, TruckState } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
-import { OrdersGateway } from './orders.gateway';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 
 @Injectable()
@@ -22,7 +21,6 @@ export class OrdersRepository {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly configService: ConfigService,
-    private readonly ordersGateway: OrdersGateway,
   ) {}
 
   async processOrderTransaction(
@@ -171,22 +169,6 @@ export class OrdersRepository {
           status: Status.COMPLETED,
         },
       });
-
-      const message = {
-        orderId: orderId,
-        status: Status.COMPLETED,
-        message: `Your Order #${order.id} is ready! Come to the truck!`,
-      };
-
-      try {
-        this.ordersGateway.notifyUser(
-          updatedOrder.userId,
-          'order_ready',
-          message,
-        );
-      } catch (error) {
-        this.logger.warn(`Failed to notify user ${updatedOrder.userId}`, error);
-      }
 
       return updatedOrder;
     } catch (error) {

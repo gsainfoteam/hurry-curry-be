@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role } from '@prisma/client';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../../../../../libs/prisma/src/prisma.service';
 
 export const REQUIRED_ROLE_KEY = 'requiredRole';
 export const RequiredRole = (role: Role) =>
