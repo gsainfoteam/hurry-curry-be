@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { OrdersController } from './orders.controller';
-import { CURRY_QUEUE } from '../../../../libs/common/src/constants';
-import { OrdersRepository } from '../../../../libs/orders/src/orders.repository';
-import { OrdersGateway } from './orders.gateway';
-import { PrismaModule } from '../../../../libs/prisma/src/prisma.module';
-import { AuthModule } from '../auth/auth.module';
-import { OrdersQueueEventsService } from './orders.queue-events';
+import { CURRY_QUEUE } from '@app/common';
+import { OrdersRepository } from '@app/orders';
+import { OrdersGateway } from '@app/api/orders/orders.gateway';
+import { OrdersQueueEventsService } from '@app/api/orders/orders.queue-events';
+import { PrismaModule } from '@app/prisma';
+import { AuthModule } from '@app/api/auth/auth.module';
 
 @Module({
   imports: [
