@@ -8,10 +8,16 @@ async function bootstrap() {
     .split(',')
     .map((origin) => origin.trim())
     .filter(Boolean);
-  const allowedOrigins =
-    origins.length > 0
-      ? origins
-      : ['http://localhost:3000', 'http://localhost:5173'];
+  const nodeEnv = process.env.NODE_ENV ?? '';
+  const isProduction = nodeEnv.toLowerCase() === 'production';
+  let allowedOrigins: string[];
+  if (origins.length > 0) {
+    allowedOrigins = origins;
+  } else if (isProduction) {
+    throw new Error('CORS_ORIGINS must be set in production');
+  } else {
+    allowedOrigins = ['http://localhost:3000', 'http://localhost:5173'];
+  }
   const allowCredentialsValue = process.env.CORS_ALLOW_CREDENTIALS ?? '';
   const allowCredentials = ['1', 'true'].includes(
     allowCredentialsValue.trim().toLowerCase(),
@@ -35,8 +41,15 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
 
-  await app.listen(3000, '0.0.0.0');
+  const portValue = process.env.PORT;
+  const parsedPort = parseInt(portValue ?? '', 10);
+  const port = Number.isNaN(parsedPort) || parsedPort <= 0 ? 3000 : parsedPort;
+  await app.listen(port, '0.0.0.0');
 
-  console.log('http://localhost:3000/api');
+  const url = await app.getUrl();
+  console.log(`${url}/api`);
 }
-bootstrap();
+void bootstrap().catch((error) => {
+  console.error('Failed to bootstrap API', error);
+  process.exit(1);
+});

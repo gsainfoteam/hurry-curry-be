@@ -29,17 +29,26 @@ export class OrdersQueueEventsService
   ) {}
 
   async onModuleInit() {
+    const nodeEnvValue =
+      this.configService.get<string>('NODE_ENV') ?? process.env.NODE_ENV ?? '';
+    const isProduction = nodeEnvValue.trim().toLowerCase() === 'production';
     const hostValue = this.configService.get<string>('REDIS_HOST');
-    const host =
-      hostValue && hostValue.trim().length > 0 ? hostValue : 'localhost';
+    const host = hostValue?.trim() ?? '';
+    if (isProduction && host.length === 0) {
+      throw new Error('REDIS_HOST must be set in production');
+    }
+    const resolvedHost = host.length > 0 ? host : 'localhost';
     const portValue = this.configService.get<string>('REDIS_PORT');
     const parsedPort = parseInt(portValue ?? '', 10);
-    const port =
-      Number.isNaN(parsedPort) || parsedPort <= 0 ? 6379 : parsedPort;
+    const hasValidPort = !Number.isNaN(parsedPort) && parsedPort > 0;
+    if (isProduction && !hasValidPort) {
+      throw new Error('REDIS_PORT must be set to a valid number in production');
+    }
+    const port = hasValidPort ? parsedPort : 6379;
 
     this.queueEvents = new QueueEvents(CURRY_QUEUE, {
       connection: {
-        host,
+        host: resolvedHost,
         port,
       },
     });
