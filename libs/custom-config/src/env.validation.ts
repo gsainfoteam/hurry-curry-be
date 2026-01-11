@@ -1,5 +1,12 @@
 import { plainToInstance } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsString, validateSync } from 'class-validator';
+import {
+  IsInt,
+  IsNotEmpty,
+  IsString,
+  Max,
+  Min,
+  validateSync,
+} from 'class-validator';
 
 export class EnvironmentVariables {
   @IsString()
@@ -14,7 +21,9 @@ export class EnvironmentVariables {
   @IsNotEmpty()
   DATABASE_PASSWORD: string;
 
-  @IsNumber()
+  @IsInt()
+  @Min(1)
+  @Max(65535)
   @IsNotEmpty()
   REDIS_PORT: number;
 

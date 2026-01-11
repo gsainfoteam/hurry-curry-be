@@ -12,7 +12,7 @@ COPY . .
 RUN DATABASE_URL="postgresql://dummy:5432/mydb" npx prisma generate
 RUN npm run build:worker
 
-RUN npm prune --production
+RUN npm ci --omit=dev
 
 FROM node:20-alpine
 

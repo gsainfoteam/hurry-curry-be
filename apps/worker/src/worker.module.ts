@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { CURRY_QUEUE } from '../../../libs/common/src/constants';
-import { PrismaModule } from '../../../libs/prisma/src/prisma.module';
+import { CURRY_QUEUE } from '@libs/common';
+import { PrismaModule } from '@libs/prisma';
 import { OrdersProcessor } from './orders.processor';
-import { OrdersRepository } from '../../../libs/orders/src/orders.repository';
+import { OrdersRepository } from '@libs/orders';
 
 @Module({
   imports: [

@@ -19,7 +19,12 @@ export class CustomConfigService {
   }
 
   get REDIS_PORT(): number {
-    return this.getEnvVariable('REDIS_PORT');
+    const value = this.getEnvVariable('REDIS_PORT');
+    const port = Number(value);
+    if (!Number.isInteger(port) || port < 1 || port > 65535) {
+      throw new Error(`Invalid REDIS_PORT: ${value}`);
+    }
+    return port;
   }
 
   get JWT_SECRET(): string {
@@ -30,7 +35,11 @@ export class CustomConfigService {
     return this.getEnvVariable('JWT_REFRESH_SECRET');
   }
 
-  get JWT_REFREH_EXPIRE(): string {
+  get JWT_REFRESH_EXPIRE(): string {
     return this.getEnvVariable('JWT_REFRESH_EXPIRE');
+  }
+
+  get JWT_REFREH_EXPIRE(): string {
+    return this.JWT_REFRESH_EXPIRE;
   }
 }

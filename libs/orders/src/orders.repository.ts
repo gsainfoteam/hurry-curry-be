@@ -5,7 +5,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from '../../prisma/src/prisma.service';
+import { PrismaService } from '@app/prisma';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Order, Status, TruckState } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';

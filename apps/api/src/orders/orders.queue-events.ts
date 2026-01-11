@@ -34,7 +34,8 @@ export class OrdersQueueEventsService
       hostValue && hostValue.trim().length > 0 ? hostValue : 'localhost';
     const portValue = this.configService.get<string>('REDIS_PORT');
     const parsedPort = parseInt(portValue ?? '', 10);
-    const port = Number.isNaN(parsedPort) ? 6379 : parsedPort;
+    const port =
+      Number.isNaN(parsedPort) || parsedPort <= 0 ? 6379 : parsedPort;
 
     this.queueEvents = new QueueEvents(CURRY_QUEUE, {
       connection: {
