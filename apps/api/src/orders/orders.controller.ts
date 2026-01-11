@@ -27,7 +27,8 @@ import { CreateOrderDto } from '../../../../libs/orders/src/dto/create-order.dto
 import { OrdersRepository } from '../../../../libs/orders/src/orders.repository';
 import { JwtAuthGuard } from '../auth/guard/jwt.guard';
 import type { Request } from 'express';
-import { OrderRoleGuard, RequiredRole } from './guard/role.guard';
+import { OrderRoleGuard } from './guard/role.guard';
+import { RequiredRole } from '../../../../libs/common/src/decorators/required-role.decorator';
 import { Role, Status } from '@prisma/client';
 import { OrdersGateway } from './orders.gateway';
 
