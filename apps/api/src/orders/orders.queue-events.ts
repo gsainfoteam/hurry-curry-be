@@ -29,8 +29,12 @@ export class OrdersQueueEventsService
   ) {}
 
   async onModuleInit() {
-    const host = this.configService.get<string>('REDIS_HOST') ?? 'localhost';
-    const port = Number(this.configService.get<string>('REDIS_PORT') ?? 6379);
+    const hostValue = this.configService.get<string>('REDIS_HOST');
+    const host =
+      hostValue && hostValue.trim().length > 0 ? hostValue : 'localhost';
+    const portValue = this.configService.get<string>('REDIS_PORT');
+    const parsedPort = parseInt(portValue ?? '', 10);
+    const port = Number.isNaN(parsedPort) ? 6379 : parsedPort;
 
     this.queueEvents = new QueueEvents(CURRY_QUEUE, {
       connection: {
